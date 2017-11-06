@@ -1,0 +1,55 @@
+apply plugin: 'com.android.library'
+
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-android-extensions'
+apply plugin: 'kotlin-kapt'
+
+android {
+    compileSdkVersion 26
+
+
+
+    defaultConfig {
+        minSdkVersion 19
+        targetSdkVersion 26
+        versionCode 1
+        versionName "1.0"
+
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+
+        javaCompileOptions {
+            annotationProcessorOptions {
+                arguments = [moduleName: project.getName()]
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+}
+
+dependencies {
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    api 'com.android.support:appcompat-v7:26.1.0'
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation 'com.android.support.test:runner:1.0.1'
+    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.1'
+    api "org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"
+    // Anko Commons
+    api "org.jetbrains.anko:anko-commons:$anko_version"
+    // Anko Layouts
+    api "org.jetbrains.anko:anko-sdk25:$anko_version" // sdk15, sdk19, sdk21, sdk23 are also available
+    api "org.jetbrains.anko:anko-appcompat-v7:$anko_version"
+    // For Lifecycles
+    api 'android.arch.lifecycle:runtime:1.0.3'
+    // For LiveData, and ViewModel
+    api 'android.arch.lifecycle:extensions:1.0.0-rc1'
+    // 阿里巴巴的路由框架
+    implementation "com.alibaba:arouter-api:$arouterApiVersion"
+    kapt "com.alibaba:arouter-compiler:$arouterCompilerVersion"
+}
