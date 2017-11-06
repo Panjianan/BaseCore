@@ -1,4 +1,4 @@
-package com.example.tsubasa.mvvmdemo;
+package com.example.tsubasa.demo;
 
 import org.junit.Test;
 

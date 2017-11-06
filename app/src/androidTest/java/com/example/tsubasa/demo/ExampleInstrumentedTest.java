@@ -1,4 +1,4 @@
-package com.example.tsubasa.mvvmdemo;
+package com.example.tsubasa.demo;
 
 import android.content.Context;
 import android.support.test.InstrumentationRegistry;

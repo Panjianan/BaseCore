@@ -10,14 +10,13 @@ import com.tsubasa.core.ui.component.BaseComponent
 import com.tsubasa.core.ui.ext.turnVisibleOrGone
 import com.tsubasa.core.ui.lifecycle.bind
 import org.jetbrains.anko.AnkoContext
-import org.jetbrains.anko.find
 import org.jetbrains.anko.frameLayout
 
 /**
  * 状态布局组件
  * Created by tsubasa on 2017/11/5.
  */
-open class StatusUIComponent : BaseComponent(), StatusCallback {
+open class StatusUIComponent : BaseComponent<FrameLayout>(), StatusCallback {
 
     /**
      * 当前的布局状态
@@ -47,7 +46,7 @@ open class StatusUIComponent : BaseComponent(), StatusCallback {
     /**
      * 空布局组件
      */
-    open var emptyUI: BaseStatusItemUIComponent? = null
+    open var emptyUI: BaseStatusItemUIComponent<*>? = DefaultStatusItemUIComponent()
         set(value) {
             container?.initItemUI(field, value, onEmptyAction)
             field = value
@@ -55,7 +54,7 @@ open class StatusUIComponent : BaseComponent(), StatusCallback {
     /**
      * 错误布局组件
      */
-    open var errorUI: BaseStatusItemUIComponent? = null
+    open var errorUI: BaseStatusItemUIComponent<*>? = DefaultStatusItemUIComponent()
         set(value) {
             container?.initItemUI(field, value, onErrorAction)
             field = value
@@ -63,7 +62,7 @@ open class StatusUIComponent : BaseComponent(), StatusCallback {
     /**
      * 加载布局组件
      */
-    open var loadingUI: BaseStatusItemUIComponent? = null
+    open var loadingUI: BaseStatusItemUIComponent<*>? = DefaultLoadingUIComponent()
         set(value) {
             container?.initItemUI(field, value)
             field = value
@@ -71,15 +70,12 @@ open class StatusUIComponent : BaseComponent(), StatusCallback {
     /**
      * 内容布局组件
      */
-    open var contentUI: BaseComponent? = null
+    open var contentUI: BaseComponent<*>? = null
 
     override fun AnkoContext<Any>.createContainer(): FrameLayout = frameLayout()
 
-    override fun createContent(parent: ViewGroup) {
+    override fun createContent(parent: FrameLayout) {
         parent.apply {
-            parent.initItemUI(null, emptyUI, onEmptyAction)
-            parent.initItemUI(null, errorUI, onErrorAction)
-            parent.initItemUI(null, loadingUI)
             contentUI?.createComponent(parent)
             (context as? LifecycleOwner)?.let {
                 bind(it)
@@ -90,9 +86,27 @@ open class StatusUIComponent : BaseComponent(), StatusCallback {
     override fun bind(owner: LifecycleOwner) {
         super.bind(owner)
         status.bind(owner) {
-            loadingUI?.isShow?.value = status.value == STATUS_LOADING
-            emptyUI?.isShow?.value = status.value == STATUS_EMPTY
-            errorUI?.isShow?.value = status.value == STATUS_ERROR
+            (status.value == STATUS_LOADING).let {
+                if (it.and(loadingUI?.container == null)) {
+                    container?.initItemUI(null, loadingUI)
+                }
+                loadingUI?.isShow?.value = it
+            }
+
+            (status.value == STATUS_EMPTY).let {
+                if (it.and(emptyUI?.container == null)) {
+                    container?.initItemUI(null, emptyUI)
+                }
+                emptyUI?.isShow?.value = it
+            }
+
+            (status.value == STATUS_ERROR).let {
+                if (it.and(errorUI?.container == null)) {
+                    container?.initItemUI(null, errorUI)
+                }
+                errorUI?.isShow?.value = it
+            }
+
             contentUI?.container?.visibility = (status.value == STATUS_SUCCESS).turnVisibleOrGone()
         }
         msg.bind(owner) {
@@ -111,7 +125,7 @@ open class StatusUIComponent : BaseComponent(), StatusCallback {
         }
     }
 
-    private fun ViewGroup.initItemUI(old: BaseStatusItemUIComponent?, component: BaseStatusItemUIComponent?, btnAction: (() -> Unit)? = null) {
+    private fun ViewGroup.initItemUI(old: BaseStatusItemUIComponent<*>?, component: BaseStatusItemUIComponent<*>?, btnAction: (() -> Unit)? = null) {
         val isShow = old?.isShow?.value
         val msg = old?.msg?.value
         old?.unBind()
@@ -119,7 +133,7 @@ open class StatusUIComponent : BaseComponent(), StatusCallback {
             container?.removeView(it)
         }
         component?.createComponent(this)
-        component?.container?.find<View>(BaseStatusItemUIComponent.VIEW_ID_BTN_RETRY)?.setOnClickListener {
+        component?.container?.findViewById<View?>(BaseStatusItemUIComponent.VIEW_ID_BTN_RETRY)?.setOnClickListener {
             (btnAction ?: onRetryAction)?.invoke()
         }
         (context as? LifecycleOwner)?.let {

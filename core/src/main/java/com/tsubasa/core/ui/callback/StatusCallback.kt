@@ -2,7 +2,6 @@ package com.tsubasa.core.ui.callback
 
 import android.arch.lifecycle.LiveData
 import android.arch.lifecycle.MutableLiveData
-import com.tsubasa.core.ui.ext.turnVisibleOrGone
 
 /**
  * 状态回调
@@ -30,10 +29,16 @@ class OnStatusCallback : StatusCallback {
 
     override val status: LiveData<Int> = MutableLiveData()
 
-    private var delegate: StatusCallback? = null
+    private var delegates: MutableList<StatusCallback?> = mutableListOf()
     private var onStart: (() -> Unit)? = null
     private var onLoading: ((msg: CharSequence?) -> Unit)? = null
     private var onEnd: ((status: Int, msg: CharSequence?) -> Unit)? = null
+
+    fun addDelegate(vararg delegate:StatusCallback?) {
+        delegate.filterNot { it == null }.forEach {
+            delegates.add(it)
+        }
+    }
 
     fun onStart(block: (() -> Unit)) {
         this.onStart = block
@@ -48,19 +53,19 @@ class OnStatusCallback : StatusCallback {
     override fun start() {
         (status as MutableLiveData).value = STATUS_LOADING
         onStart?.invoke()
-        delegate?.start()
+        delegates.forEach { it?.start() }
     }
 
     override fun onLoading(msg: CharSequence?) {
         (status as MutableLiveData).value = STATUS_LOADING
         onLoading?.invoke(msg)
-        delegate?.onLoading(msg)
+        delegates.forEach { it?.onLoading(msg) }
     }
 
     override fun end(status: Int, msg: CharSequence?) {
         (this.status as MutableLiveData).value = status
         onEnd?.invoke(status, msg)
-        delegate?.end(status, msg)
+        delegates.forEach { it?.end(status, msg) }
     }
 
 }

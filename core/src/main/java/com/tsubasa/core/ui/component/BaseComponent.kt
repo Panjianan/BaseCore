@@ -11,7 +11,7 @@ import org.jetbrains.anko.AnkoContext
  * 组件基类
  * Created by tsubasa on 2017/11/4.
  */
-abstract class BaseComponent : AnkoComponent<Context> {
+abstract class BaseComponent<T : ViewGroup> : AnkoComponent<Context> {
 
     /**
      * 在别的组件中，通过createContent，可以创建多个控件，
@@ -38,12 +38,12 @@ abstract class BaseComponent : AnkoComponent<Context> {
     /**
      * 提供容器的方法
      */
-    abstract protected fun AnkoContext<Any>.createContainer(): ViewGroup
+    abstract protected fun AnkoContext<Any>.createContainer(): T
 
     /**
      * 创建组件内的内容
      */
-    abstract protected fun createContent(parent: ViewGroup)
+    abstract protected fun createContent(parent: T)
 
     /**
      * AnkoComponent默认要实现的方法
