@@ -2,6 +2,7 @@ package com.example.tsubasa.demo
 
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
+import com.tsubasa.core.common.base.yes
 import com.tsubasa.core.ui.callback.STATUS_ERROR
 import com.tsubasa.core.ui.callback.STATUS_LOADING
 import com.tsubasa.core.ui.component.statuslayout.StatusUIComponent
@@ -20,6 +21,5 @@ class MainActivity : AppCompatActivity() {
                 statusUIComponent.end(STATUS_ERROR, "加载错误")
             }, 4000)
         }, 4000)
-
     }
 }

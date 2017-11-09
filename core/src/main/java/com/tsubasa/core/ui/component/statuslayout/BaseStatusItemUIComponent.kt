@@ -4,7 +4,7 @@ import android.arch.lifecycle.LifecycleOwner
 import android.arch.lifecycle.MutableLiveData
 import android.view.ViewGroup
 import com.tsubasa.core.ui.component.BaseComponent
-import com.tsubasa.core.ui.lifecycle.bind
+import com.tsubasa.core.util.lifecycle.bind
 
 /**
  * 状态布局的具体页面基类

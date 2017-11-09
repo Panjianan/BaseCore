@@ -8,7 +8,7 @@ import android.widget.FrameLayout
 import com.tsubasa.core.ui.callback.*
 import com.tsubasa.core.ui.component.BaseComponent
 import com.tsubasa.core.ui.ext.turnVisibleOrGone
-import com.tsubasa.core.ui.lifecycle.bind
+import com.tsubasa.core.util.lifecycle.bind
 import org.jetbrains.anko.AnkoContext
 import org.jetbrains.anko.frameLayout
 
