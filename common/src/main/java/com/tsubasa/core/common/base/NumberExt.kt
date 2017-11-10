@@ -76,7 +76,6 @@ fun String?.trans2Double(default: Double = 0.0): Double {
     }
 }
 
-
 fun String?.trans2BigDecimal(default: BigDecimal = BigDecimal(0)): BigDecimal {
     return try {
         BigDecimal(this)
@@ -93,6 +92,7 @@ fun String?.trans2BigInteger(default: BigInteger = BigInteger("0")): BigInteger 
     }
 }
 
+fun Number?.trans2NumberStr(pattern: NumberPattern = NumberPattern.NumberFoc2Digit, errorStr: String = ""): String = toString().trans2NumberStr(pattern, errorStr)
 
 fun String?.trans2NumberStr(pattern: NumberPattern = NumberPattern.NumberFoc2Digit, errorStr: String = ""): String {
     return try {

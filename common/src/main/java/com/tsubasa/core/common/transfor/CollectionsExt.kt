@@ -30,5 +30,5 @@ fun String?.trans2List(separator: String = ","): List<String> {
     str.trim().isEmpty().yes {
         return emptyList()
     }
-    return str.split(separator).filterNot { it.isNullOrEmpty() }.toList()
+    return str.split(separator).filterNot { it.isEmpty() }.toList()
 }
