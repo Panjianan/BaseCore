@@ -84,7 +84,6 @@ open class StatusUIComponent : BaseComponent<FrameLayout>(), StatusCallback {
     }
 
     override fun bind(owner: LifecycleOwner) {
-        super.bind(owner)
         status.bind(owner) {
             (status.value == STATUS_LOADING).let {
                 if (it.and(loadingUI?.container == null)) {

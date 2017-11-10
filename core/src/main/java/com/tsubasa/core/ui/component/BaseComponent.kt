@@ -1,6 +1,9 @@
 package com.tsubasa.core.ui.component
 
+import android.arch.lifecycle.Lifecycle
+import android.arch.lifecycle.LifecycleObserver
 import android.arch.lifecycle.LifecycleOwner
+import android.arch.lifecycle.OnLifecycleEvent
 import android.content.Context
 import android.view.View
 import android.view.ViewGroup
@@ -24,11 +27,9 @@ abstract class BaseComponent<T : ViewGroup> : AnkoComponent<Context> {
             }
         }
 
-
     protected var owner: LifecycleOwner? = null
 
     open fun bind(owner: LifecycleOwner) {
-        this.owner = owner
     }
 
     open fun unBind() {
@@ -49,12 +50,7 @@ abstract class BaseComponent<T : ViewGroup> : AnkoComponent<Context> {
      * AnkoComponent默认要实现的方法
      */
     override final fun createView(ui: AnkoContext<Context>): View {
-        return ui.createContainer().apply {
-            let {
-                createContent(it)
-                container = it
-            }
-        }
+        return ui.createContainer().apply { let { createContentInContainer(it) } }
     }
 
     /**
@@ -65,12 +61,16 @@ abstract class BaseComponent<T : ViewGroup> : AnkoComponent<Context> {
             throw Exception("zhe view has been created， you can reuse the view or recreate a component")
         }
         return with(AnkoContext.Companion.createDelegate(parent)) {
-            createContainer().apply {
-                let {
-                    createContent(it)
-                    container = it
-                }
-            }
+            createContainer().apply { let { createContentInContainer(it) } }
+        }
+    }
+
+    private fun createContentInContainer(parent: T) {
+        createContent(parent)
+        container = parent
+        (parent.context as? LifecycleOwner)?.let {
+            this@BaseComponent.owner = it
+            bind(it)
         }
     }
 

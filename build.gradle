@@ -5,6 +5,7 @@ buildscript {
     ext._targetSdkVersion = 26
     ext._sourceCompatibility = JavaVersion.VERSION_1_8
     ext._targetCompatibility = JavaVersion.VERSION_1_8
+    ext.appcompat_v7_version = '26.1.0'
     ext.kotlin_version = '1.1.51'
     ext.anko_version = '0.10.2'
     ext.arouterCompilerVersion = "1.1.4"

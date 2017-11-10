@@ -2,7 +2,6 @@ package com.tsubasa.core.ui.component.statuslayout
 
 import android.support.v4.content.ContextCompat
 import android.view.Gravity
-import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import com.tsubasa.core.R
