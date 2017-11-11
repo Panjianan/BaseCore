@@ -42,7 +42,7 @@ class SwipeToLoadLayout(context: Context, attributeSet: AttributeSet? = null, de
         return this
     }
 
-    inline fun <T: View> T.lparams(
+    fun <T: View> T.lparams(
             c: Context?,
             attrs: AttributeSet?
     ): T {
@@ -62,7 +62,7 @@ class SwipeToLoadLayout(context: Context, attributeSet: AttributeSet? = null, de
         return this
     }
 
-    inline fun <T: View> T.lparams(
+    fun <T: View> T.lparams(
             width: Int = android.view.ViewGroup.LayoutParams.WRAP_CONTENT,
             height: Int = android.view.ViewGroup.LayoutParams.WRAP_CONTENT
     ): T {
@@ -81,7 +81,7 @@ class SwipeToLoadLayout(context: Context, attributeSet: AttributeSet? = null, de
         return this
     }
 
-    inline fun <T: View> T.lparams(
+    fun <T: View> T.lparams(
             source: ViewGroup.LayoutParams?
     ): T {
         val layoutParams = SmartRefreshLayout.LayoutParams(source!!)
@@ -99,7 +99,7 @@ class SwipeToLoadLayout(context: Context, attributeSet: AttributeSet? = null, de
         return this
     }
 
-    inline fun <T: View> T.lparams(
+    fun <T: View> T.lparams(
             source: ViewGroup.MarginLayoutParams?
     ): T {
         val layoutParams = SmartRefreshLayout.LayoutParams(source!!)
@@ -117,7 +117,7 @@ class SwipeToLoadLayout(context: Context, attributeSet: AttributeSet? = null, de
         return this
     }
 
-    inline fun <T: View> T.lparams(
+    fun <T: View> T.lparams(
             source: SmartRefreshLayout.LayoutParams?
     ): T {
         val layoutParams = SmartRefreshLayout.LayoutParams(source!!)

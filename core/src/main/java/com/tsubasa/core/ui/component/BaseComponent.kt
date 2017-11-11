@@ -40,7 +40,7 @@ abstract class BaseComponent<T : ViewGroup> : AnkoComponent<Context> {
      * AnkoComponent默认要实现的方法
      */
     override final fun createView(ui: AnkoContext<Context>): View {
-        return createContainer(ui).apply { let { createContentInContainer(it) } }
+        return createContainer(ui).apply { createContentInContainer(this) }
     }
 
     /**
@@ -48,20 +48,18 @@ abstract class BaseComponent<T : ViewGroup> : AnkoComponent<Context> {
      */
     fun createComponent(parent: ViewGroup): ViewGroup {
         if (container != null) {
-            throw Exception("zhe view has been created， you can reuse the view or recreate a component")
+            throw Exception("view has been created， you can reuse the view or recreate a component")
         }
         return with(AnkoContext.Companion.createDelegate(parent)) {
-            createContainer(this).apply { let { createContentInContainer(it) } }
+            createContainer(this).apply { createContentInContainer(this) }
         }
     }
 
     private fun createContentInContainer(parent: T) {
+        owner = parent.context as? LifecycleOwner
         createContent(parent)
         container = parent
-        (parent.context as? LifecycleOwner)?.let {
-            this@BaseComponent.owner = it
-            bindData(it)
-        }
+        owner?.let { bindData(it) }
     }
 
     /**

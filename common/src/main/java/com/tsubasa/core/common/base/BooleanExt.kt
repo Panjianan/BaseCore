@@ -28,9 +28,6 @@ inline infix fun <T> BooleanExt<T>.otherwise(block: () -> T): T {
     return when (this) {
         is Otherwise -> block()
         is WithData<T> -> this.data
-        else -> {
-            throw  IllegalAccessException()
-        }
     }
 }
 

@@ -27,14 +27,11 @@ class BaseComponentAdapter<DATA, UIComponent : BaseComponent<*>>(private val cre
 
     override fun convert(helper: UIComponentViewHolder<DATA, UIComponent>?, item: DATA) {
         helper?.observer?.onChanged(item)
-        Log.e("convert", "height = ${helper?.itemView?.height}   width = ${helper?.itemView?.width}")
     }
 }
 
 fun <DATA, UIComponent : BaseComponent<*>> Context.createAdapter(block: (() -> UIComponent)): BaseComponentAdapter<DATA, UIComponent> {
     return BaseComponentAdapter {
-        createViewHolder<DATA, UIComponent>(block.invoke()).apply {
-            val childCount = (itemView as ViewGroup).childCount
-        }
+        createViewHolder<DATA, UIComponent>(block.invoke())
     }
 }

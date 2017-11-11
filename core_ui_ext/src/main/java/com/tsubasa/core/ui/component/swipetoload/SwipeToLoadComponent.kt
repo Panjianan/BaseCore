@@ -1,11 +1,9 @@
 package com.tsubasa.core.ui.component.swipetoload
 
 import android.arch.lifecycle.LifecycleOwner
-import android.arch.lifecycle.MediatorLiveData
 import android.arch.lifecycle.MutableLiveData
-import android.content.Context
 import com.tsubasa.core.ui.callback.Status
-import com.tsubasa.core.ui.callback.StatusCallback
+import com.tsubasa.core.ui.callback.StatusData
 import com.tsubasa.core.ui.component.BaseComponent
 import com.tsubasa.core.ui.widget.swipetoload.SwipeToLoadLayout
 import com.tsubasa.core.ui.widget.swipetoload.swipeToLoadLayout
@@ -24,20 +22,11 @@ import org.jetbrains.anko.matchParent
  * <br> Modification 2017/11/10 17:33
  * <br> Copyright Copyright © 2012 - 2017 Tsubasa.All Rights Reserved.
  */
-enum class Action {
-    Init,
-    Refresh,
-    LoadMore
-}
+open class SwipeToLoadComponent<ContentUI : BaseComponent<*>>(private val viewStyle: (SwipeToLoadLayout.() -> Unit)? = null) : BaseComponent<SwipeToLoadLayout>() {
 
-data class SwipeStatus(val status: Status, val action: Action, var message: CharSequence? = null)
-
-class SwipeToLoadComponent<ContentUI : BaseComponent<*>> : BaseComponent<SwipeToLoadLayout>(), StatusCallback<SwipeStatus> {
-
-    val autoLoadMore: MutableLiveData<Boolean> = MutableLiveData()
-    val initStatus: MutableLiveData<Status> = MutableLiveData()
-    val refreshStatus: MutableLiveData<Status> = MutableLiveData()
-    val loadMoreStatus: MutableLiveData<Status> = MutableLiveData()
+    val initStatus: MutableLiveData<StatusData> = MutableLiveData()
+    val refreshStatus: MutableLiveData<StatusData> = MutableLiveData()
+    val loadMoreStatus: MutableLiveData<StatusData> = MutableLiveData()
     var onRefresh: (() -> Unit)? = null
         set(value) {
             container?.setOnRefreshListener { value?.invoke() }
@@ -48,18 +37,6 @@ class SwipeToLoadComponent<ContentUI : BaseComponent<*>> : BaseComponent<SwipeTo
             container?.setOnLoadmoreListener { value?.invoke() }
             field = value
         }
-
-    override val status: MutableLiveData<SwipeStatus> = MediatorLiveData<SwipeStatus>().apply {
-        addSource(initStatus) {
-            value = refreshStatus.value?.let { SwipeStatus(it, Action.Init) }
-        }
-        addSource(refreshStatus) {
-            value = refreshStatus.value?.let { SwipeStatus(it, Action.Refresh) }
-        }
-        addSource(loadMoreStatus) {
-            value = loadMoreStatus.value?.let { SwipeStatus(it, Action.LoadMore) }
-        }
-    }
 
     /**
      * 内容布局组件
@@ -73,7 +50,9 @@ class SwipeToLoadComponent<ContentUI : BaseComponent<*>> : BaseComponent<SwipeTo
             field = value
         }
 
-    override fun createContainer(context: AnkoContext<Any>): SwipeToLoadLayout = context.swipeToLoadLayout()
+    override fun createContainer(context: AnkoContext<Any>): SwipeToLoadLayout = context.swipeToLoadLayout().apply {
+        viewStyle?.invoke(this)
+    }
 
     override fun createContent(parent: SwipeToLoadLayout) {
         parent.apply {
@@ -83,62 +62,53 @@ class SwipeToLoadComponent<ContentUI : BaseComponent<*>> : BaseComponent<SwipeTo
 
     @Suppress("NON_EXHAUSTIVE_WHEN")
     override fun bindData(lifecycleOwner: LifecycleOwner) {
-        status.bind(lifecycleOwner) {
-            when (it?.action) {
-                Action.Refresh -> onRefreshStateChange(it.status)
-                Action.LoadMore -> onLoadStateChange(it.status)
-                else -> {
-                }
-            }
+        initStatus.bind(lifecycleOwner) {
+            container?.finishRefresh(true)
+            container?.finishLoadmore(true)
         }
-        autoLoadMore.bind(lifecycleOwner) {
-            container?.isEnableAutoLoadmore = it ?: false
+        refreshStatus.bind(lifecycleOwner) {
+            it?.let { onRefreshStateChange(it) }
+        }
+        loadMoreStatus.bind(lifecycleOwner) {
+            it?.let { onLoadStateChange(it) }
         }
         container?.setOnRefreshListener { onRefresh?.invoke() }
         container?.setOnRefreshListener { onLoadMore?.invoke() }
     }
 
-    private fun onRefreshStateChange(status: Status) {
-        when (status) {
+    private fun onRefreshStateChange(status: StatusData) {
+        when (status.status) {
             Status.STATUS_LOADING -> container?.autoRefresh()
             else -> container?.finishRefresh()
         }
 
-        when (status) {
+        when (status.status) {
             Status.STATUS_SUCCESS -> {
                 container?.isLoadmoreFinished = false
-                container?.isEnableAutoLoadmore = autoLoadMore.value ?: false
             }
             else -> {
                 container?.isLoadmoreFinished = true
-                container?.isEnableAutoLoadmore = false
             }
         }
     }
 
-    private fun onLoadStateChange(status: Status) {
-        when (status) {
+    private fun onLoadStateChange(status: StatusData) {
+        when (status.status) {
             Status.STATUS_LOADING -> container?.autoLoadmore()
             Status.STATUS_ERROR -> container?.finishLoadmore(false)
             else -> container?.finishLoadmore(true)
         }
 
-        when (status) {
+        when (status.status) {
             Status.STATUS_EMPTY, Status.STATUS_SUCCESS_NO_MORE -> {
                 container?.isLoadmoreFinished = true
-                container?.isEnableAutoLoadmore = false
             }
             Status.STATUS_LOADING -> {
+                // do noting
             }
             else -> {
                 container?.isLoadmoreFinished = false
-                container?.isEnableAutoLoadmore = autoLoadMore.value ?: false
             }
         }
-    }
-
-    override fun statusChange(status: SwipeStatus, msg: CharSequence?) {
-        status.message = msg
-        this.status.value = status
     }
 }

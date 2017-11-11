@@ -5,42 +5,66 @@ import android.arch.lifecycle.Observer
 import android.graphics.Color
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
-import android.view.ViewGroup
+import android.view.Gravity
 import android.widget.LinearLayout
+import com.tsubasa.core.common.base.otherwise
+import com.tsubasa.core.common.base.yes
 import com.tsubasa.core.ui.callback.Status
+import com.tsubasa.core.ui.callback.StatusData
 import com.tsubasa.core.ui.component.BaseComponent
-import com.tsubasa.core.ui.component.statuslayout.StatusUIComponentFactory
-import com.tsubasa.core.ui.component.statuslayout.getAdapter
-import com.tsubasa.core.ui.component.statuslayout.getSwipeToLoadComponent
+import com.tsubasa.core.ui.component.StandardListComponent
 import com.tsubasa.core.ui.component.viewholder.createAdapter
 import com.tsubasa.core.util.lifecycle.bind
 import org.jetbrains.anko.*
 
 class MainActivity : AppCompatActivity() {
 
+    private lateinit var standardListComponent: StandardListComponent<String>
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val standardListComponent = StatusUIComponentFactory.standardListComponent {
+        standardListComponent = StandardListComponent(swipeViewStyle = {
+            //            isEnableAutoLoadmore = false
+        }) {
             createAdapter<String, CustomMainListItemComponent> {
                 CustomMainListItemComponent()
             }
-//            object :BaseQuickAdapter<String, BaseViewHolder>(R.layout.item) {
-//                override fun convert(helper: BaseViewHolder?, item: String?) {
-//                    (helper?.itemView as? TextView)?.text = item
-//                }
-//            }
         }
-        standardListComponent.setContentView(this)
+        standardListComponent.apply {
+            setContentView(this@MainActivity)
+            onInit = {
+                fakeLoadData(initStatus)
+            }
+            onRefresh = {
+                fakeLoadData(refreshStatus)
+            }
+            onLoadMore = {
+                fakeLoadData(loadMoreStatus, false)
+            }
+        }
 
-        standardListComponent.status.value = Status.STATUS_LOADING
-        standardListComponent.container?.postDelayed({
-            standardListComponent.status.value = Status.STATUS_SUCCESS
-            standardListComponent.getSwipeToLoadComponent()?.initStatus?.value = Status.STATUS_SUCCESS
-            val dataList = "a,b,c,d,e,f,g,h,i,j,k,l,m,n,a,b,c,d,e,f,g,h,i,j,k,l,m,n,a,b,c,d,e,f,g,h,i,j,k,l,m,n".split(",").toMutableList()
+        standardListComponent.onInit?.invoke()
+    }
 
-            standardListComponent.getAdapter<String>()?.setNewData(dataList)
-        }, 1000)
+    private fun fakeLoadData(status: MutableLiveData<StatusData>?, isRefresh: Boolean = true) {
+        status?.value = StatusData(Status.STATUS_LOADING, "加载中")
+        contentView?.postDelayed({
+            isRefresh.yes {
+                status?.value = StatusData(Status.STATUS_SUCCESS, "数据为空")
+                val dataList = Array(30) {
+                    it.toString()
+                }.toList()
+                standardListComponent.getAdapter()?.setNewData(dataList)
+            }.otherwise {
+                val size = standardListComponent.getAdapter()?.data?.size ?: 0
+                val dataList = Array((size > 100).yes { 0 }.otherwise { 30 }) {
+                    size.plus(it).toString()
+                }.toList()
+                status?.value = (dataList.isNotEmpty()).yes { StatusData(Status.STATUS_SUCCESS) }.otherwise { StatusData(Status.STATUS_EMPTY, "没有更多了") }
+                standardListComponent.getAdapter()?.addData(dataList)
+            }
+        }, 2000)
     }
 }
 
@@ -60,8 +84,8 @@ class CustomMainListItemComponent : BaseComponent<LinearLayout>(), Observer<Stri
         parent.apply {
             backgroundColor = Color.BLUE
             textView {
+                gravity = Gravity.CENTER
                 textColor = Color.WHITE
-                text = "null"
                 data.bind(owner) {
                     text = data.value
                 }
