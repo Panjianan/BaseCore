@@ -1,10 +1,12 @@
 package com.tsubasa.core.ui.component.statuslayout
 
+import android.content.Context
 import android.support.v4.content.ContextCompat
 import android.view.Gravity
 import android.widget.LinearLayout
 import android.widget.TextView
 import com.tsubasa.core.R
+import com.tsubasa.core.ui.ext.turnVisibleOrGone
 import com.tsubasa.core.ui.widget.loadingindicator.LoadingIndicatorView
 import com.tsubasa.core.ui.widget.loadingindicator.indicators.LineSpinLoaderIndicator
 import com.tsubasa.core.ui.widget.loadingindicator.loadingIndicatorView
@@ -16,7 +18,7 @@ import org.jetbrains.anko.*
  */
 class DefaultLoadingUIComponent : BaseStatusItemUIComponent<LinearLayout>() {
 
-    override fun AnkoContext<Any>.createContainer(): LinearLayout = verticalLayout()
+    override fun createContainer(context: AnkoContext<Any>): LinearLayout = context.verticalLayout()
 
     override fun createContent(parent: LinearLayout) {
         (parent as? _LinearLayout)?.apply {
@@ -43,6 +45,7 @@ class DefaultLoadingUIComponent : BaseStatusItemUIComponent<LinearLayout>() {
 
     override fun showLayout(isShow: Boolean) {
         container?.findViewById<LoadingIndicatorView?>(VIEW_ID_ICON)?.let {
+            it.visibility = isShow.turnVisibleOrGone()
             if (isShow) {
                 it.startAnimation()
             } else {

@@ -181,6 +181,7 @@ class TimeSpanConverter internal constructor(val accordingTimeMillis: Long, priv
 val defaultTimeSpanConverterInit: (TimeSpanConverter.() -> Unit) = {
     val instance = Calendar.getInstance()
     instance.timeInMillis = accordingTimeMillis
+
     // 去年之前的时间
     instance.set(instance.get(Calendar.YEAR), 0, 1, 0, 0, 0)
     addInterceptorWithTimePoint(instance.timeInMillis, 1) { _, timeBeforeSpanMillis ->

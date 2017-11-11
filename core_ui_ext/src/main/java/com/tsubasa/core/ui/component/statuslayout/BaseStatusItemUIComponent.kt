@@ -21,21 +21,21 @@ abstract class BaseStatusItemUIComponent<T : ViewGroup> : BaseComponent<T>() {
     val isShow: MutableLiveData<Boolean> = MutableLiveData()
     val msg: MutableLiveData<CharSequence> = MutableLiveData()
 
-    override fun bind(owner: LifecycleOwner) {
-        this.owner = owner
-        isShow.bind(owner) {
+    override fun bindData(lifecycleOwner: LifecycleOwner) {
+        this.owner = lifecycleOwner
+        isShow.bind(lifecycleOwner) {
             if (container != null) {
                 showLayout(it ?: false)
             }
         }
-        msg.bind(owner) {
+        msg.bind(lifecycleOwner) {
             if (container != null) {
                 showMsg(it)
             }
         }
     }
 
-    override fun unBind() {
+    open fun unBind() {
         owner?.let {
             isShow.removeObservers(it)
             msg.removeObservers(it)

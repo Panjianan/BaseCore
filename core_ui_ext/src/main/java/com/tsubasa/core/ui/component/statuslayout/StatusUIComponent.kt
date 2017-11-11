@@ -2,26 +2,32 @@ package com.tsubasa.core.ui.component.statuslayout
 
 import android.arch.lifecycle.LifecycleOwner
 import android.arch.lifecycle.MutableLiveData
+import android.content.Context
+import android.support.v7.widget.RecyclerView
 import android.view.View
-import android.view.ViewGroup
-import android.widget.FrameLayout
+import com.chad.library.adapter.base.BaseQuickAdapter
 import com.tsubasa.core.ui.callback.*
 import com.tsubasa.core.ui.component.BaseComponent
+import com.tsubasa.core.ui.component.recyclerview.RecyclerViewComponent
+import com.tsubasa.core.ui.component.swipetoload.SwipeToLoadComponent
+import com.tsubasa.core.ui.component.viewholder.BaseComponentAdapter
 import com.tsubasa.core.ui.ext.turnVisibleOrGone
 import com.tsubasa.core.util.lifecycle.bind
 import org.jetbrains.anko.AnkoContext
+import org.jetbrains.anko._FrameLayout
 import org.jetbrains.anko.frameLayout
+import org.jetbrains.anko.matchParent
 
 /**
  * 状态布局组件
  * Created by tsubasa on 2017/11/5.
  */
-open class StatusUIComponent : BaseComponent<FrameLayout>(), StatusCallback {
+open class StatusUIComponent<ContentUI : BaseComponent<*>> : BaseComponent<_FrameLayout>(), StatusCallback<Status> {
 
     /**
      * 当前的布局状态
      */
-    override val status: MutableLiveData<Int> = MutableLiveData()
+    override val status: MutableLiveData<Status> = MutableLiveData()
 
     /**
      * 当前的提示文字
@@ -70,92 +76,95 @@ open class StatusUIComponent : BaseComponent<FrameLayout>(), StatusCallback {
     /**
      * 内容布局组件
      */
-    open var contentUI: BaseComponent<*>? = null
-
-    override fun AnkoContext<Any>.createContainer(): FrameLayout = frameLayout()
-
-    override fun createContent(parent: FrameLayout) {
-        parent.apply {
-            contentUI?.createComponent(parent)
-            (context as? LifecycleOwner)?.let {
-                bind(it)
+    var contentUI: ContentUI? = null
+        set(value) {
+            container?.let { parent ->
+                field?.container?.let { parent.removeView(it) }
+                value?.createComponent(parent)
             }
+            field = value
+        }
+
+    override fun createContainer(context: AnkoContext<Any>): _FrameLayout = context.frameLayout() as _FrameLayout
+
+    override fun createContent(parent: _FrameLayout) {
+        parent.apply {
+            contentUI?.createComponent(parent)?.lparams(matchParent, matchParent)
         }
     }
 
-    override fun bind(owner: LifecycleOwner) {
-        status.bind(owner) {
-            (status.value == STATUS_LOADING).let {
+    override fun bindData(lifecycleOwner: LifecycleOwner) {
+        status.bind(lifecycleOwner) {
+            (status.value == Status.STATUS_LOADING).let {
                 if (it.and(loadingUI?.container == null)) {
                     container?.initItemUI(null, loadingUI)
                 }
                 loadingUI?.isShow?.value = it
             }
 
-            (status.value == STATUS_EMPTY).let {
+            (status.value == Status.STATUS_EMPTY).let {
                 if (it.and(emptyUI?.container == null)) {
                     container?.initItemUI(null, emptyUI)
                 }
                 emptyUI?.isShow?.value = it
             }
 
-            (status.value == STATUS_ERROR).let {
+            (status.value == Status.STATUS_ERROR).let {
                 if (it.and(errorUI?.container == null)) {
                     container?.initItemUI(null, errorUI)
                 }
                 errorUI?.isShow?.value = it
             }
 
-            contentUI?.container?.visibility = (status.value == STATUS_SUCCESS).turnVisibleOrGone()
+            contentUI?.container?.visibility = (status.value == Status.STATUS_SUCCESS).or(status.value == Status.STATUS_SUCCESS_NO_MORE).turnVisibleOrGone()
         }
-        msg.bind(owner) {
+        msg.bind(lifecycleOwner) {
             when (status.value) {
-                STATUS_LOADING -> loadingUI?.msg?.value = it
-                STATUS_EMPTY -> emptyUI?.msg?.value = it
-                STATUS_ERROR -> errorUI?.msg?.value = it
+                Status.STATUS_LOADING -> loadingUI?.msg?.value = it
+                Status.STATUS_EMPTY -> emptyUI?.msg?.value = it
+                Status.STATUS_ERROR -> errorUI?.msg?.value = it
+                else -> {
+                }
             }
         }
     }
 
-    override fun unBind() {
-        owner?.let {
-            status.removeObservers(it)
-            msg.removeObservers(it)
-        }
-    }
-
-    private fun ViewGroup.initItemUI(old: BaseStatusItemUIComponent<*>?, component: BaseStatusItemUIComponent<*>?, btnAction: (() -> Unit)? = null) {
+    private fun _FrameLayout.initItemUI(old: BaseStatusItemUIComponent<*>?, component: BaseStatusItemUIComponent<*>?, btnAction: (() -> Unit)? = null) {
         val isShow = old?.isShow?.value
         val msg = old?.msg?.value
         old?.unBind()
         old?.container?.let {
             container?.removeView(it)
         }
-        component?.createComponent(this)
+        component?.createComponent(this)?.lparams(matchParent, matchParent)
         component?.container?.findViewById<View?>(BaseStatusItemUIComponent.VIEW_ID_BTN_RETRY)?.setOnClickListener {
             (btnAction ?: onRetryAction)?.invoke()
-        }
-        (context as? LifecycleOwner)?.let {
-            component?.bind(it)
-            component?.isShow?.bind(it) { component.container?.visibility = it.turnVisibleOrGone() }
         }
         component?.isShow?.value = isShow
         component?.msg?.value = msg
     }
 
-    override fun start() {
-        status.value = STATUS_LOADING
-    }
-
-    override fun onLoading(msg: CharSequence?) {
-        status.value = STATUS_LOADING
-        this.msg.value = msg
-    }
-
-    override fun end(status: Int, msg: CharSequence?) {
+    override fun statusChange(status: Status, msg: CharSequence?) {
         this.status.value = status
         this.msg.value = msg
     }
-
 }
 
+object StatusUIComponentFactory {
+    fun standardListComponent(initBlock: (RecyclerView.() -> RecyclerView.Adapter<*>)): StatusUIComponent<SwipeToLoadComponent<RecyclerViewComponent>> {
+        return StatusUIComponent<SwipeToLoadComponent<RecyclerViewComponent>>().apply {
+            val swipeToLoadComponent = SwipeToLoadComponent<RecyclerViewComponent>()
+            swipeToLoadComponent.contentUI = RecyclerViewComponent(initBlock)
+            contentUI = swipeToLoadComponent
+        }
+    }
+}
+
+fun StatusUIComponent<SwipeToLoadComponent<RecyclerViewComponent>>.getSwipeToLoadComponent(): SwipeToLoadComponent<RecyclerViewComponent>? {
+    return contentUI
+}
+
+fun <DATA> StatusUIComponent<SwipeToLoadComponent<RecyclerViewComponent>>.getAdapter(): BaseQuickAdapter<DATA, *>? {
+    @Suppress("UNCHECKED_CAST")
+    return contentUI?.contentUI?.container?.adapter as? BaseQuickAdapter<DATA, *>
+}

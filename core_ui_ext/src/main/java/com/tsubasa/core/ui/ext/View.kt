@@ -1,6 +1,9 @@
 package com.tsubasa.core.ui.ext
 
+import android.content.Context
 import android.view.View
+import org.jetbrains.anko.AnkoContext
+import org.jetbrains.anko.UI
 
 /**
  * View的相关扩展

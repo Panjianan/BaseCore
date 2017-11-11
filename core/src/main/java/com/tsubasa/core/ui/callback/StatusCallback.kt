@@ -7,67 +7,45 @@ import android.arch.lifecycle.MutableLiveData
  * 状态回调
  * Created by tsubasa on 2017/11/4.
  */
-const val STATUS_SUCCESS = 0
-const val STATUS_ERROR = 1
-const val STATUS_EMPTY = 2
-const val STATUS_LOADING = 3
+enum class Status {
+    STATUS_SUCCESS,
+    STATUS_SUCCESS_NO_MORE,
+    STATUS_ERROR,
+    STATUS_EMPTY,
+    STATUS_LOADING
+}
 
 
-interface StatusCallback {
+interface StatusCallback<T> {
 
-    val status: LiveData<Int>
+    val status: LiveData<T>
 
-    fun start()
-
-    fun onLoading(msg: CharSequence? = null)
-
-    fun end(status: Int = STATUS_SUCCESS, msg: CharSequence? = null)
+    fun statusChange(status: T, msg: CharSequence? = null)
 
 }
 
-class OnStatusCallback : StatusCallback {
+class OnStatusCallback : StatusCallback<Status> {
 
-    override val status: LiveData<Int> = MutableLiveData()
+    private val mStatus: MutableLiveData<Status> = MutableLiveData()
+    override val status: LiveData<Status> = mStatus
 
-    private var delegates: MutableList<StatusCallback?> = mutableListOf()
-    private var onStart: (() -> Unit)? = null
-    private var onLoading: ((msg: CharSequence?) -> Unit)? = null
-    private var onEnd: ((status: Int, msg: CharSequence?) -> Unit)? = null
-
-    fun addDelegate(vararg delegate:StatusCallback?) {
+    private var delegates: MutableList<StatusCallback<Status>> = mutableListOf()
+    fun addDelegate(vararg delegate: StatusCallback<Status>?) {
         delegate.filterNot { it == null }.forEach {
-            delegates.add(it)
+            delegates.add(it!!)
         }
     }
 
-    fun onStart(block: (() -> Unit)) {
-        this.onStart = block
-    }
-    fun onLoading(block: ((msg: CharSequence?) -> Unit)) {
-        this.onLoading = block
-    }
-    fun onEnd(block: ((status: Int, msg: CharSequence?) -> Unit)) {
-        this.onEnd = block
+    private var onStatusChange: ((status: Status, msg: CharSequence?) -> Unit)? = null
+    fun onStatusChange(block: ((status: Status, msg: CharSequence?) -> Unit)) {
+        this.onStatusChange = block
     }
 
-    override fun start() {
-        (status as MutableLiveData).value = STATUS_LOADING
-        onStart?.invoke()
-        delegates.forEach { it?.start() }
+    override fun statusChange(status: Status, msg: CharSequence?) {
+        mStatus.value = status
+        onStatusChange?.invoke(status, msg)
+        delegates.forEach { it.statusChange(status, msg) }
     }
-
-    override fun onLoading(msg: CharSequence?) {
-        (status as MutableLiveData).value = STATUS_LOADING
-        onLoading?.invoke(msg)
-        delegates.forEach { it?.onLoading(msg) }
-    }
-
-    override fun end(status: Int, msg: CharSequence?) {
-        (this.status as MutableLiveData).value = status
-        onEnd?.invoke(status, msg)
-        delegates.forEach { it?.end(status, msg) }
-    }
-
 }
 
 fun createStatusCallback(init: OnStatusCallback.() -> Unit): OnStatusCallback {
