@@ -17,32 +17,6 @@ import java.util.concurrent.TimeUnit
  * <br> Modification 2017/11/10 11:50
  * <br> Copyright Copyright © 2012 - 2017 Tsubasa.All Rights Reserved.
  */
-
-/**
- * 毫秒与毫秒的倍数
- */
-const val MILLISSECCOND: Long = 1.toLong()
-
-/**
- * 秒与毫秒的倍数
- */
-const val SECOND: Long = 1000.toLong()
-
-/**
- * 分与毫秒的倍数
- */
-const val MIN: Long = 60000.toLong()
-
-/**
- * 时与毫秒的倍数
- */
-const val HOUR: Long = 3600000.toLong()
-
-/**
- * 天与毫秒的倍数
- */
-const val DAY: Long = 86400000.toLong()
-
 open class TimePattern private constructor(val pattern: String) {
     companion object {
         val COMMON_PATTERN = TimePattern("yyyy-MM-dd HH:mm:ss")
@@ -105,9 +79,14 @@ fun String?.trans2Date(pattern: TimePattern = TimePattern.COMMON_PATTERN): Date?
     }
 }
 
-class FriendlyTimeSpanConverter internal constructor(private val currentTime: Long, private val timeMillis: Long, init: (FriendlyTimeSpanConverter.() -> Unit)? = null) {
+/**
+ * 用于处理时间差的转换器
+ * @param accordingTimeMillis 依据的时间
+ * @param timeMillis 需要计算时间差的时间
+ */
+class TimeSpanConverter internal constructor(val accordingTimeMillis: Long, private val timeMillis: Long, init: (TimeSpanConverter.() -> Unit)? = null) {
 
-    private val timeSpan = currentTime - timeMillis
+    private val timeSpan = accordingTimeMillis - timeMillis
 
     private val interceptorList: MutableList<Interceptor> = mutableListOf()
 
@@ -130,16 +109,16 @@ class FriendlyTimeSpanConverter internal constructor(private val currentTime: Lo
 
     /**
      * 添加时间段的拦截(当轮到这个拦截器时，时间差在比设定的时间差要大时)
-     * @param stage 和当前时间的时间差，单位是stageUnit
+     * @param stageEarlier 和当前时间的时间差，单位是stageUnit，条件是比这个时间差要大
      * @param stageUnit 和当前时间的时间差的单位
      * @param priority 当前拦截器的优先度
      * @param formatter 转化为字符串的回调
      */
-    fun addInterceptorWithStage(stage: Long, stageUnit: TimeUnit = TimeUnit.MILLISECONDS, priority: Long = 0, formatter: ((timeSpan: Long, timeBeforeSpanMillis: Long) -> String)) {
+    fun addInterceptorWithStage(stageEarlier: Long, stageUnit: TimeUnit = TimeUnit.MILLISECONDS, priority: Long = 0, formatter: ((timeSpan: Long, timeBeforeSpanMillis: Long) -> String)) {
         interceptorList.add(object : Interceptor {
             override val range: LongRange? = null
             override val priority: Long = priority
-            override var stage: Long = stageUnit.toMillis(stage)
+            override var stage: Long = stageUnit.toMillis(stageEarlier)
 
             override fun format(timeSpan: Long, timeBeforeSpanMillis: Long): String {
                 return formatter.invoke(timeSpan, timeBeforeSpanMillis)
@@ -149,12 +128,12 @@ class FriendlyTimeSpanConverter internal constructor(private val currentTime: Lo
 
     /**
      * 添加时间点的拦截(当轮到这个拦截器时，时间比拦截器的时间点要早时)
-     * @param timePointMillis 判断的时间点
+     * @param timeMillisEarlier 判断的时间点，条件是比这个时间要早
      * @param priority 当前拦截器的优先度
      * @param formatter 转化为字符串的回调
      */
-    fun addInterceptorWithTimePoint(timePointMillis: Long, priority: Long = 0, formatter: ((timeSpan: Long, timeBeforeSpanMillis: Long) -> String)) {
-        addInterceptorWithStage(currentTime.minus(timePointMillis.minus(1)), TimeUnit.MILLISECONDS, priority, formatter)
+    fun addInterceptorWithTimePoint(timeMillisEarlier: Long, priority: Long = 0, formatter: ((timeSpan: Long, timeBeforeSpanMillis: Long) -> String)) {
+        addInterceptorWithStage(accordingTimeMillis.minus(timeMillisEarlier.minus(1)), TimeUnit.MILLISECONDS, priority, formatter)
     }
 
     /**
@@ -196,60 +175,61 @@ class FriendlyTimeSpanConverter internal constructor(private val currentTime: Lo
     }
 }
 
-fun Long.trans2FriendTimeSpan(currentTime: Long = System.currentTimeMillis(), block: (FriendlyTimeSpanConverter.() -> Unit)? = null): String {
-    return FriendlyTimeSpanConverter(currentTime, this).apply {
-        if (block != null) {
-            block.invoke(this)
-        } else {
-            val instance = Calendar.getInstance()
-            instance.timeInMillis = currentTime
-            // 去年之前的时间
-            instance.set(instance.get(Calendar.YEAR), 0, 1, 0, 0, 0)
-            addInterceptorWithTimePoint(instance.timeInMillis, 1) { _, timeBeforeSpanMillis ->
-                timeBeforeSpanMillis.trans2TimeStampStr(TimePattern.getInstance("yyyy年MM月dd日 HH时mm分"))
-            }
+/**
+ * 默认的拦截器处理
+ */
+val defaultTimeSpanConverterInit: (TimeSpanConverter.() -> Unit) = {
+    val instance = Calendar.getInstance()
+    instance.timeInMillis = accordingTimeMillis
+    // 去年之前的时间
+    instance.set(instance.get(Calendar.YEAR), 0, 1, 0, 0, 0)
+    addInterceptorWithTimePoint(instance.timeInMillis, 1) { _, timeBeforeSpanMillis ->
+        timeBeforeSpanMillis.trans2TimeStampStr(TimePattern.getInstance("yyyy年MM月dd日 HH时mm分"))
+    }
 
-            // 拿今天的第一秒的时间
-            instance.timeInMillis = currentTime
-            instance.set(Calendar.HOUR_OF_DAY, 0)
-            instance.set(Calendar.MINUTE, 0)
-            instance.set(Calendar.SECOND, 0)
-            instance.set(Calendar.MILLISECOND, 0)
-            val todayStartMillis = instance.timeInMillis
+    // 拿今天的第一秒的时间
+    instance.timeInMillis = accordingTimeMillis
+    instance.set(Calendar.HOUR_OF_DAY, 0)
+    instance.set(Calendar.MINUTE, 0)
+    instance.set(Calendar.SECOND, 0)
+    instance.set(Calendar.MILLISECOND, 0)
+    val todayStartMillis = instance.timeInMillis
 
-            // 到今年第一天0点以内
-            instance.add(Calendar.DAY_OF_MONTH, -2)
-            addInterceptorWithTimePoint(instance.timeInMillis) { _, timeBeforeSpanMillis ->
-                timeBeforeSpanMillis.trans2TimeStampStr(TimePattern.getInstance("MM月dd日 HH时mm分"))
-            }
+    // 到今年第一天0点以内
+    instance.add(Calendar.DAY_OF_MONTH, -2)
+    addInterceptorWithTimePoint(instance.timeInMillis) { _, timeBeforeSpanMillis ->
+        timeBeforeSpanMillis.trans2TimeStampStr(TimePattern.getInstance("MM月dd日 HH时mm分"))
+    }
 
-            // 到前天0点以内
-            instance.timeInMillis = todayStartMillis
-            instance.add(Calendar.DAY_OF_MONTH, -1)
-            addInterceptorWithTimePoint(instance.timeInMillis) { _, timeBeforeSpanMillis ->
-                timeBeforeSpanMillis.trans2TimeStampStr(TimePattern.getInstance("前天 HH时mm分"))
-            }
+    // 到前天0点以内
+    instance.timeInMillis = todayStartMillis
+    instance.add(Calendar.DAY_OF_MONTH, -1)
+    addInterceptorWithTimePoint(instance.timeInMillis) { _, timeBeforeSpanMillis ->
+        timeBeforeSpanMillis.trans2TimeStampStr(TimePattern.getInstance("前天 HH时mm分"))
+    }
 
-            // 到昨天0点以内
-            addInterceptorWithTimePoint(todayStartMillis) { _, timeBeforeSpanMillis ->
-                timeBeforeSpanMillis.trans2TimeStampStr(TimePattern.getInstance("昨天 HH时mm分"))
-            }
+    // 到昨天0点以内
+    addInterceptorWithTimePoint(todayStartMillis) { _, timeBeforeSpanMillis ->
+        timeBeforeSpanMillis.trans2TimeStampStr(TimePattern.getInstance("昨天 HH时mm分"))
+    }
 
-            // 到今天0点以内
-            addInterceptorWithStage(1, TimeUnit.HOURS) { _, timeBeforeSpanMillis ->
-                timeBeforeSpanMillis.trans2TimeStampStr(TimePattern.getInstance("HH时mm分"))
-            }
+    // 到今天0点以内
+    addInterceptorWithStage(1, TimeUnit.HOURS) { _, timeBeforeSpanMillis ->
+        timeBeforeSpanMillis.trans2TimeStampStr(TimePattern.getInstance("HH时mm分"))
+    }
 
-            // 一小时内
-            addInterceptorWithStage(1, TimeUnit.MINUTES) { timeSpan, _ ->
-                "${TimeUnit.MILLISECONDS.toMinutes(timeSpan)}分钟前"
-            }
+    // 一小时内
+    addInterceptorWithStage(1, TimeUnit.MINUTES) { timeSpan, _ ->
+        "${TimeUnit.MILLISECONDS.toMinutes(timeSpan)}分钟前"
+    }
 
-            // 一分钟内
-            addInterceptorWithStage(0, TimeUnit.MILLISECONDS) { timeSpan, timeBeforeSpanMillis ->
-                timeBeforeSpanMillis.trans2TimeStampStr(TimePattern.getInstance("刚刚"))
-                "${TimeUnit.MILLISECONDS.toSeconds(timeSpan)}秒前"
-            }
-        }
-    }.format()
+    // 一分钟内
+    addInterceptorWithStage(0, TimeUnit.MILLISECONDS) { timeSpan, timeBeforeSpanMillis ->
+        timeBeforeSpanMillis.trans2TimeStampStr(TimePattern.getInstance("刚刚"))
+        "${TimeUnit.MILLISECONDS.toSeconds(timeSpan)}秒前"
+    }
+}
+
+fun Long.trans2FriendTimeSpan(currentTime: Long = System.currentTimeMillis(), block: (TimeSpanConverter.() -> Unit)? = defaultTimeSpanConverterInit): String {
+    return TimeSpanConverter(currentTime, this).apply { block?.invoke(this) }.format()
 }

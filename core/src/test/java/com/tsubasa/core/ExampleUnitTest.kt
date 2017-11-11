@@ -35,7 +35,7 @@ class ExampleUnitTest {
                 "2016-12-04 11:55:00"
         )
         time.forEach {
-            println("time = $it  currentTime = $currentTime  friendlyTimeHint = ${it.trans2Millis().trans2FriendTimeSpan(currentTimeMillis)}")
+            println("time = $it  accordingTimeMillis = $currentTime  friendlyTimeHint = ${it.trans2Millis().trans2FriendTimeSpan(currentTimeMillis)}")
         }
     }
 }
