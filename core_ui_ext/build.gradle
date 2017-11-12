@@ -55,6 +55,6 @@ dependencies {
     //稳定版的下拉刷新框架
     api 'com.scwang.smartrefresh:SmartRefreshLayout:1.0.3'
     // 强大的RecyclerAdapter框架
-    api 'com.github.CymChad:BaseRecyclerViewAdapterHelper:2.9.30'
+    implementation 'com.github.CymChad:BaseRecyclerViewAdapterHelper:2.9.30'
 
 }

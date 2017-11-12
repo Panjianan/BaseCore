@@ -46,6 +46,7 @@ dependencies {
     api 'android.arch.lifecycle:runtime:1.0.3'
     // For LiveData, and ViewModel
     api 'android.arch.lifecycle:extensions:1.0.0'
+    kapt 'android.arch.lifecycle:compiler:1.0.0'
     // 阿里巴巴的路由框架
     implementation "com.alibaba:arouter-api:$arouterApiVersion"
     kapt "com.alibaba:arouter-compiler:$arouterCompilerVersion"

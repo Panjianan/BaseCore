@@ -64,8 +64,9 @@ open class CommonLifecycleObserver : GenericLifecycleObserver {
 
 }
 
-fun LifecycleOwner.addObserver(block: (CommonLifecycleObserver.() -> Unit)? = null) {
+fun LifecycleOwner.addObserver(block: (CommonLifecycleObserver.() -> Unit)? = null): LifecycleObserver {
     val commonLifecycleObserver = CommonLifecycleObserver()
     block?.invoke(commonLifecycleObserver)
     lifecycle.addObserver(commonLifecycleObserver)
+    return commonLifecycleObserver
 }

@@ -9,11 +9,11 @@ import android.view.Gravity
 import android.widget.LinearLayout
 import com.tsubasa.core.common.base.otherwise
 import com.tsubasa.core.common.base.yes
-import com.tsubasa.core.ui.callback.Status
-import com.tsubasa.core.ui.callback.StatusData
+import com.tsubasa.core.model.Status
+import com.tsubasa.core.model.StatusResponse
 import com.tsubasa.core.ui.component.BaseComponent
 import com.tsubasa.core.ui.component.StandardListComponent
-import com.tsubasa.core.ui.component.viewholder.createAdapter
+import com.tsubasa.core.ui.component.recyclerview.adapter.createAdapter
 import com.tsubasa.core.util.lifecycle.bind
 import org.jetbrains.anko.*
 
@@ -27,9 +27,7 @@ class MainActivity : AppCompatActivity() {
         standardListComponent = StandardListComponent(swipeViewStyle = {
             //            isEnableAutoLoadmore = false
         }) {
-            createAdapter<String, CustomMainListItemComponent> {
-                CustomMainListItemComponent()
-            }
+            createAdapter(initUI = { CustomMainListItemComponent() }, initObserver = { this })
         }
         standardListComponent.apply {
             setContentView(this@MainActivity)
@@ -47,22 +45,22 @@ class MainActivity : AppCompatActivity() {
         standardListComponent.onInit?.invoke()
     }
 
-    private fun fakeLoadData(status: MutableLiveData<StatusData>?, isRefresh: Boolean = true) {
-        status?.value = StatusData(Status.STATUS_LOADING, "加载中")
+    private fun fakeLoadData(status: MutableLiveData<StatusResponse<*>>?, isRefresh: Boolean = true) {
+        status?.value = StatusResponse<Any>(Status.STATUS_LOADING, "加载中")
         contentView?.postDelayed({
             isRefresh.yes {
-                status?.value = StatusData(Status.STATUS_SUCCESS, "数据为空")
+                status?.value = StatusResponse<Any>(Status.STATUS_SUCCESS, "数据为空")
                 val dataList = Array(30) {
                     it.toString()
                 }.toList()
-                standardListComponent.getAdapter()?.setNewData(dataList)
+                standardListComponent.getAdapter()?.data = dataList
             }.otherwise {
                 val size = standardListComponent.getAdapter()?.data?.size ?: 0
                 val dataList = Array((size > 100).yes { 0 }.otherwise { 30 }) {
                     size.plus(it).toString()
                 }.toList()
-                status?.value = (dataList.isNotEmpty()).yes { StatusData(Status.STATUS_SUCCESS) }.otherwise { StatusData(Status.STATUS_EMPTY, "没有更多了") }
-                standardListComponent.getAdapter()?.addData(dataList)
+                status?.value = (dataList.isNotEmpty()).yes { StatusResponse<Any>(Status.STATUS_SUCCESS) }.otherwise { StatusResponse(Status.STATUS_EMPTY, "没有更多了") }
+                standardListComponent.getAdapter()?.addDatas(dataList)
             }
         }, 2000)
     }

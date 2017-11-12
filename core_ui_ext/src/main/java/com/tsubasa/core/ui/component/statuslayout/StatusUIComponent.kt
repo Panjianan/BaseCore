@@ -3,8 +3,8 @@ package com.tsubasa.core.ui.component.statuslayout
 import android.arch.lifecycle.LifecycleOwner
 import android.arch.lifecycle.MutableLiveData
 import android.view.View
-import com.tsubasa.core.ui.callback.Status
-import com.tsubasa.core.ui.callback.StatusData
+import com.tsubasa.core.model.Status
+import com.tsubasa.core.model.StatusResponse
 import com.tsubasa.core.ui.component.BaseComponent
 import com.tsubasa.core.ui.ext.turnVisibleOrGone
 import com.tsubasa.core.util.lifecycle.bind
@@ -22,7 +22,7 @@ open class StatusUIComponent<ContentUI : BaseComponent<*>> : BaseComponent<_Fram
     /**
      * 当前的布局状态
      */
-    val status: MutableLiveData<StatusData> = MutableLiveData()
+    val status: MutableLiveData<StatusResponse<*>> = MutableLiveData()
 
     /**
      * 初始化的动作

@@ -1,16 +1,15 @@
-package com.tsubasa.core.ui.component.viewholder
+package com.tsubasa.core.ui.component.recyclerview.viewholder
 
 import android.arch.lifecycle.Observer
 import android.content.Context
 import android.support.v7.widget.RecyclerView
-import android.view.ViewGroup
 import com.chad.library.adapter.base.BaseViewHolder
 import com.tsubasa.core.ui.component.BaseComponent
 import org.jetbrains.anko.*
 
 /***
  * <br> Project BaseCore
- * <br> Package com.tsubasa.core.ui.component.viewholder
+ * <br> Package com.tsubasa.core.ui.component.recyclerview.viewholder
  * <br> Description ViewHolder
  * <br> Version 1.0
  * <br> Author Tsubasa
@@ -27,9 +26,3 @@ open class UIComponentViewHolder<DATA, out T : BaseComponent<*>>
             }
         }.view
 )
-
-
-fun <DATA, T : BaseComponent<*>> Context.createViewHolder(uiComponent: T): UIComponentViewHolder<DATA, T> {
-    @Suppress("UNCHECKED_CAST")
-    return UIComponentViewHolder(uiComponent, uiComponent as Observer<DATA>, this)
-}
