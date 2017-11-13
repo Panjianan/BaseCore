@@ -39,17 +39,24 @@ dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     testApi 'junit:junit:4.12'
     api project(':common')
-    api "org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"
+    //noinspection GradleDependency
+    api deps.support.app_compat
+    api deps.kotlin.stdlib
     // Anko Commons
-    api "org.jetbrains.anko:anko-commons:$anko_version"
+    api deps.anko.anko_commons
     // For Lifecycles
-    api 'android.arch.lifecycle:runtime:1.0.3'
+    api deps.lifecycle.runtime
     // For LiveData, and ViewModel
-    api 'android.arch.lifecycle:extensions:1.0.0'
-    kapt 'android.arch.lifecycle:compiler:1.0.0'
+    api deps.lifecycle.extensions
     // 阿里巴巴的路由框架
-    implementation "com.alibaba:arouter-api:$arouterApiVersion"
-    kapt "com.alibaba:arouter-compiler:$arouterCompilerVersion"
+    api deps.arouter.api
+    // dagger
+    api deps.dagger.runtime
+    api deps.dagger.android
+    api deps.dagger.android_support
 
-
+    kapt deps.dagger.android_support_compiler
+    kapt deps.dagger.compiler
+    kapt deps.lifecycle.compiler
+    kapt deps.arouter.compiler
 }
