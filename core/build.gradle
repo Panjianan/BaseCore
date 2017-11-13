@@ -54,6 +54,14 @@ dependencies {
     api deps.dagger.runtime
     api deps.dagger.android
     api deps.dagger.android_support
+    // retrofit2
+    api deps.retrofit.runtime
+    api deps.retrofit.gson
+    api deps.retrofit.rxjava2
+    // rxjava
+    api deps.rxjava2
+    api deps.rx_android
+
 
     kapt deps.dagger.android_support_compiler
     kapt deps.dagger.compiler
