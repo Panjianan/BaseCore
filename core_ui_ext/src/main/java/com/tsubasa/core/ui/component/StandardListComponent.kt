@@ -4,7 +4,7 @@ import android.arch.lifecycle.LifecycleOwner
 import android.support.v7.widget.RecyclerView
 import com.tsubasa.core.common.base.yes
 import com.tsubasa.core.model.Status
-import com.tsubasa.core.model.StatusResponse
+import com.tsubasa.core.model.Resource
 import com.tsubasa.core.ui.component.recyclerview.RecyclerViewComponent
 import com.tsubasa.core.ui.component.recyclerview.adapter.ComponentAdapter
 import com.tsubasa.core.ui.component.statuslayout.StatusUIComponent
@@ -54,7 +54,7 @@ class StandardListComponent<DATA>(swipeViewStyle: (SwipeToLoadLayout.() -> Unit)
         getAdapter()?.size?.bind(lifecycleOwner) {
             // 列表为空时显示空布局
             (it == 0).yes {
-                contentUI?.status?.value = StatusResponse<DATA>(Status.STATUS_EMPTY, contentUI?.emptyUI?.msg?.value)
+                contentUI?.status?.value = Resource<DATA>(Status.STATUS_EMPTY, contentUI?.emptyUI?.msg?.value)
             }
         }
     }

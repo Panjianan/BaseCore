@@ -109,9 +109,6 @@ fun Application.initManager(init: Application.() -> Unit) {
     activityLifecycleCallbacks {
         onActivityCreated { activity, _ ->
             activityList.add(activity)
-        }
-
-        onActivityResumed { activity ->
             activityCurrent = activity
         }
 

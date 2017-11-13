@@ -7,7 +7,7 @@ import java.util.regex.Pattern
  * Common class used by API responses.
  * Created by tsubasa on 2017/11/12.
  */
-open class ApiResonse<DATA> {
+open class ApiResponse<DATA> {
 
     private companion object {
         val LINK_PATTERN = Pattern.compile("<([^>]*)>[\\s]*;[\\s]*rel=\"([a-zA-Z0-9]+)\"")
@@ -48,18 +48,3 @@ open class ApiResonse<DATA> {
         }
     }
 }
-
-
-class RetrofitReponse<DATA>(code: Int, errorMessage: String?, body: DATA? = null) : ApiResonse<DATA>(code, errorMessage, body) {
-
-    constructor(data: Mock<DATA>) : this(with(data) {
-        0
-    }, with(data) {
-        ""
-    }, with(data) {
-        null
-    })
-
-}
-
-class Mock<DATA>(val code: Int, val errorMessage: String?, val body: DATA? = null)

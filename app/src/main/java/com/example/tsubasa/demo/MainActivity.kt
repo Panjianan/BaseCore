@@ -9,8 +9,8 @@ import android.view.Gravity
 import android.widget.LinearLayout
 import com.tsubasa.core.common.base.otherwise
 import com.tsubasa.core.common.base.yes
+import com.tsubasa.core.model.Resource
 import com.tsubasa.core.model.Status
-import com.tsubasa.core.model.StatusResponse
 import com.tsubasa.core.ui.component.BaseComponent
 import com.tsubasa.core.ui.component.StandardListComponent
 import com.tsubasa.core.ui.component.recyclerview.adapter.createAdapter
@@ -45,11 +45,11 @@ class MainActivity : AppCompatActivity() {
         standardListComponent.onInit?.invoke()
     }
 
-    private fun fakeLoadData(status: MutableLiveData<StatusResponse<*>>?, isRefresh: Boolean = true) {
-        status?.value = StatusResponse<Any>(Status.STATUS_LOADING, "加载中")
+    private fun fakeLoadData(status: MutableLiveData<Resource<*>>?, isRefresh: Boolean = true) {
+        status?.value = Resource<Any>(Status.STATUS_LOADING, "加载中")
         contentView?.postDelayed({
             isRefresh.yes {
-                status?.value = StatusResponse<Any>(Status.STATUS_SUCCESS, "数据为空")
+                status?.value = Resource<Any>(Status.STATUS_SUCCESS, "数据为空")
                 val dataList = Array(30) {
                     it.toString()
                 }.toList()
@@ -59,7 +59,7 @@ class MainActivity : AppCompatActivity() {
                 val dataList = Array((size > 100).yes { 0 }.otherwise { 30 }) {
                     size.plus(it).toString()
                 }.toList()
-                status?.value = (dataList.isNotEmpty()).yes { StatusResponse<Any>(Status.STATUS_SUCCESS) }.otherwise { StatusResponse(Status.STATUS_EMPTY, "没有更多了") }
+                status?.value = (dataList.isNotEmpty()).yes { Resource<Any>(Status.STATUS_SUCCESS) }.otherwise { Resource(Status.STATUS_EMPTY, "没有更多了") }
                 standardListComponent.getAdapter()?.addDatas(dataList)
             }
         }, 2000)
