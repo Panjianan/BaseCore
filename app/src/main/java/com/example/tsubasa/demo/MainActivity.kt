@@ -7,6 +7,8 @@ import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.view.Gravity
 import android.widget.LinearLayout
+import com.alibaba.android.arouter.facade.annotation.Route
+import com.tsubasa.core.common.annotation.Injectable
 import com.tsubasa.core.common.base.otherwise
 import com.tsubasa.core.common.base.yes
 import com.tsubasa.core.model.Resource
@@ -17,6 +19,8 @@ import com.tsubasa.core.ui.component.recyclerview.adapter.createAdapter
 import com.tsubasa.core.util.lifecycle.bind
 import org.jetbrains.anko.*
 
+@Injectable
+@Route(path = "/core/aaa")
 class MainActivity : AppCompatActivity() {
 
     private lateinit var standardListComponent: StandardListComponent<String>
@@ -66,6 +70,8 @@ class MainActivity : AppCompatActivity() {
     }
 }
 
+
+@Injectable
 class CustomMainListItemComponent : BaseComponent<LinearLayout>(), Observer<String> {
 
     val data: MutableLiveData<String> = MutableLiveData()

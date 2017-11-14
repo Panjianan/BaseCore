@@ -61,8 +61,6 @@ dependencies {
     // rxjava
     api deps.rxjava2
     api deps.rx_android
-
-
     kapt deps.dagger.android_support_compiler
     kapt deps.dagger.compiler
     kapt deps.lifecycle.compiler

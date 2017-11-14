@@ -44,4 +44,5 @@ dependencies {
     implementation project(':core')
     implementation project(':core_ui_ext')
     kapt deps.arouter.compiler
+    kapt project(':core-compiler')
 }
