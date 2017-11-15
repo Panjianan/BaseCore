@@ -6,8 +6,6 @@ import android.content.ContextWrapper
 import android.os.Bundle
 import android.support.v4.app.Fragment
 import android.support.v4.app.FragmentActivity
-import com.tsubasa.core.di.Injectable
-import dagger.android.AndroidInjection
 import dagger.android.DispatchingAndroidInjector
 import dagger.android.support.AndroidSupportInjection
 import dagger.android.support.HasSupportFragmentInjector
@@ -35,15 +33,14 @@ class ApplicationWrap private constructor(application: Application) : ContextWra
 
     fun inject(activity: Activity) {
         if (activity is HasSupportFragmentInjector) {
+            // TODO
             dispatchingAndroidInject.inject(activity)
         }
         if (activity is FragmentActivity) {
             activity.supportFragmentManager.registerFragmentLifecycleCallbacks(object : android.support.v4.app.FragmentManager.FragmentLifecycleCallbacks() {
                 override fun onFragmentCreated(fm: android.support.v4.app.FragmentManager?, f: Fragment?, savedInstanceState: Bundle?) {
-                    if (f is Injectable) {
-                        // TODO
-                        AndroidSupportInjection.inject(f)
-                    }
+                    // TODO
+                    AndroidSupportInjection.inject(f)
                 }
             }, true)
         }

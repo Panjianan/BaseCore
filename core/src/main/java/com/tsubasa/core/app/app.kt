@@ -5,14 +5,7 @@ package com.tsubasa.core.app
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.Application
-import android.app.FragmentManager
 import android.os.Bundle
-import android.support.v4.app.Fragment
-import android.support.v4.app.FragmentActivity
-import com.tsubasa.core.di.Injectable
-import dagger.android.AndroidInjection
-import dagger.android.support.AndroidSupportInjection
-import dagger.android.support.HasSupportFragmentInjector
 
 /**
  * app组件

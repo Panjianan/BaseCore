@@ -7,6 +7,8 @@ import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeSpec;
+import com.squareup.javapoet.WildcardTypeName;
+import com.tsubasa.core.common.annotation.Initable;
 import com.tsubasa.core.common.annotation.Injectable;
 import com.tsubasa.core_compiler.utils.Consts;
 import com.tsubasa.core_compiler.utils.Logger;
@@ -39,9 +41,12 @@ import javax.lang.model.util.Types;
 
 import static com.tsubasa.core_compiler.utils.Consts.ACTIVITY;
 import static com.tsubasa.core_compiler.utils.Consts.ANNOTATION_TYPE_INJECTABLE;
+import static com.tsubasa.core_compiler.utils.Consts.INITABLE;
+import static com.tsubasa.core_compiler.utils.Consts.ITROUTE_INITIALIZER_ROOT;
 import static com.tsubasa.core_compiler.utils.Consts.ITROUTE_ROOT;
 import static com.tsubasa.core_compiler.utils.Consts.KEY_MODULE_NAME;
 import static com.tsubasa.core_compiler.utils.Consts.METHOD_LOAD_INTO;
+import static com.tsubasa.core_compiler.utils.Consts.NAME_OF_INITIALIZER_ROOT;
 import static com.tsubasa.core_compiler.utils.Consts.NAME_OF_ROOT;
 import static com.tsubasa.core_compiler.utils.Consts.PACKAGE_OF_GENERATE_FILE;
 import static com.tsubasa.core_compiler.utils.Consts.SEPARATOR;
@@ -112,6 +117,14 @@ public class InjectableProcess extends AbstractProcessor {
             try {
                 logger.info(">>> Found routes, start... <<<");
                 this.parseRoutes(routeElements);
+            } catch (Exception e) {
+                logger.error(e);
+            }
+
+            routeElements = roundEnv.getElementsAnnotatedWith(Initable.class);
+            try {
+                logger.info(">>> Found routes, start... <<<");
+                this.parseInitializer(routeElements);
 
             } catch (Exception e) {
                 logger.error(e);
@@ -126,7 +139,7 @@ public class InjectableProcess extends AbstractProcessor {
         if (CollectionUtils.isNotEmpty(routeElements)) {
             // Perpare the type an so on.
 
-            logger.info(">>> Found routes, size is " + routeElements.size() + " <<<");
+            logger.info(">>> Found Injectable routes, size is " + routeElements.size() + " <<<");
 
             rootMap.clear();
 
@@ -174,6 +187,73 @@ public class InjectableProcess extends AbstractProcessor {
                     TypeSpec.classBuilder(rootFileName)
                             .addJavadoc(WARNING_TIPS)
                             .addSuperinterface(ClassName.get(elements.getTypeElement(ITROUTE_ROOT)))
+                            .addModifiers(PUBLIC)
+                            .addMethod(loadIntoMethodOfRootBuilder.build())
+                            .build()
+            ).build().writeTo(mFiler);
+
+            logger.info(">>> Generated root, name is " + rootFileName + " <<<");
+        }
+    }
+
+    private void parseInitializer(Set<? extends Element> routeElements) throws IOException {
+        if (CollectionUtils.isNotEmpty(routeElements)) {
+            // Perpare the type an so on.
+
+            logger.info(">>> Found Initable routes, size is " + routeElements.size() + " <<<");
+
+            rootMap.clear();
+
+            // 这个还要拿来判断可初始化的接口的
+            TypeMirror typeInitializer = elements.getTypeElement(INITABLE).asType();
+
+            /*
+               Build input type, format as :
+               ```Map<String, Class<? extends IInitializer>>```
+             */
+            ParameterizedTypeName inputMapTypeOfRoot = ParameterizedTypeName.get(
+                    ClassName.get(Map.class),
+                    ClassName.get(String.class),
+                    ParameterizedTypeName.get(
+                            ClassName.get(Set.class),
+                            ParameterizedTypeName.get(
+                                    ClassName.get(Class.class),
+                                    WildcardTypeName.subtypeOf(ClassName.get(typeInitializer))
+                            )
+                    )
+            );
+
+            /*
+              Build input param name.
+             */
+            ParameterSpec rootParamSpec = ParameterSpec.builder(inputMapTypeOfRoot, "routes").build();
+
+            /*
+              Build method : 'loadInto'
+             */
+            MethodSpec.Builder loadIntoMethodOfRootBuilder = MethodSpec.methodBuilder(METHOD_LOAD_INTO)
+                    .addAnnotation(Override.class)
+                    .addModifiers(PUBLIC)
+                    .addParameter(rootParamSpec);
+
+            //  Follow a sequence, find out metas of group first, generate java file, then statistics them as root.
+            for (Element element : routeElements) {
+                TypeMirror tm = element.asType();
+                if (types.isSubtype(tm, typeInitializer)) {
+                    loadIntoMethodOfRootBuilder.addStatement("routes.get($S).add($T.class)", moduleName, ClassName.get((TypeElement) element));
+                }
+                // if (StringUtils.isEmpty(moduleName)) {   // Hasn't generate the module name.
+                //     moduleName = ModuleUtils.generateModuleName(element, logger);
+                // }
+            }
+
+
+            // Write root meta into disk.
+            String rootFileName = NAME_OF_INITIALIZER_ROOT + SEPARATOR + moduleName;
+            JavaFile.builder(PACKAGE_OF_GENERATE_FILE,
+                    TypeSpec.classBuilder(rootFileName)
+                            .addJavadoc(WARNING_TIPS)
+                            .addSuperinterface(ClassName.get(elements.getTypeElement(ITROUTE_INITIALIZER_ROOT)))
                             .addModifiers(PUBLIC)
                             .addMethod(loadIntoMethodOfRootBuilder.build())
                             .build()

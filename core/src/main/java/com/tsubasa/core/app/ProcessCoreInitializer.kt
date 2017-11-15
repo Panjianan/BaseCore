@@ -8,8 +8,6 @@ import android.net.Uri
 import android.support.annotation.RestrictTo
 import android.util.Log
 import com.alibaba.android.arouter.launcher.ARouter
-import com.tsubasa.core.di.DaggerAppComponent
-import com.tsubasa.core.di.Warehouse
 
 /**
  * 仿照google的套路，用这个ContentProvider执行初始化操作，避免侵入Application
@@ -21,10 +19,10 @@ class ProcessCoreInitializer : ContentProvider() {
     override fun onCreate(): Boolean {
         (context.applicationContext as? Application)?.initManager {
             ApplicationWrap.createAppWrap(this)
-            DaggerAppComponent.builder().application(this).build().inject(getApplication())
             ARouter.init(this)
             Log.e("ProcessCoreInitializer", "init success")
             Warehouse.initGroup()
+            Warehouse.iniModuleInitializer()
         }
         return true
     }

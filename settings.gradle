@@ -1,1 +1,1 @@
-include ':app', ':core', ':common', ':core_ui_ext', ':core_net_retrofit_ext', ':core-compiler'
+include ':app', ':core', ':common', ':core_ui_ext', ':core-compiler'

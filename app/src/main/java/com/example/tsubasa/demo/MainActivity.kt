@@ -2,21 +2,25 @@ package com.example.tsubasa.demo
 
 import android.arch.lifecycle.MutableLiveData
 import android.arch.lifecycle.Observer
+import android.content.Context
 import android.graphics.Color
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.view.Gravity
 import android.widget.LinearLayout
 import com.alibaba.android.arouter.facade.annotation.Route
+import com.tsubasa.core.common.annotation.Initable
 import com.tsubasa.core.common.annotation.Injectable
 import com.tsubasa.core.common.base.otherwise
 import com.tsubasa.core.common.base.yes
 import com.tsubasa.core.model.Resource
 import com.tsubasa.core.model.Status
+import com.tsubasa.core.template.IInitializer
 import com.tsubasa.core.ui.component.BaseComponent
 import com.tsubasa.core.ui.component.StandardListComponent
 import com.tsubasa.core.ui.component.recyclerview.adapter.createAdapter
 import com.tsubasa.core.util.lifecycle.bind
+import dagger.android.AndroidInjector
 import org.jetbrains.anko.*
 
 @Injectable
@@ -70,8 +74,6 @@ class MainActivity : AppCompatActivity() {
     }
 }
 
-
-@Injectable
 class CustomMainListItemComponent : BaseComponent<LinearLayout>(), Observer<String> {
 
     val data: MutableLiveData<String> = MutableLiveData()
@@ -97,5 +99,12 @@ class CustomMainListItemComponent : BaseComponent<LinearLayout>(), Observer<Stri
                 layoutParams = LinearLayout.LayoutParams(matchParent, dip(30))
             }
         }
+    }
+}
+
+@Initable
+class TestInit : IInitializer {
+    override fun init(context: Context) {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 }
